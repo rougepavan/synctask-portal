@@ -56,6 +56,12 @@ public class Task {
         createdTimestamp = LocalDateTime.now();
     }
 
+    @PostLoad
+    protected void onPostLoad() {
+        if (status == null) status = TaskStatus.TODO;
+        if (priority == null) priority = TaskPriority.MEDIUM;
+    }
+
     // Getters and Setters
     public Long getId() {
         return id;

@@ -141,6 +141,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     localStorage.setItem('themeMode', isDarkMode ? 'dark' : 'light');
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, [isDarkMode]);
 
   useEffect(() => {
