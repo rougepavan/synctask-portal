@@ -40,7 +40,6 @@ public class SecurityConfig {
         return new JwtAuthenticationFilter();
     }
 
-    @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
