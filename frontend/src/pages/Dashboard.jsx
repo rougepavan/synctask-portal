@@ -77,7 +77,7 @@ function DonutChart({ done, inProgress, todo, size = 120, isDarkMode }) {
 
 function BarChart({ highP, medP, lowP }) {
   const max = Math.max(highP, medP, lowP, 1);
-  const barH = 90;
+  const barH = 70;
   const bars = [
     { label: 'HIGH', value: highP, color: '#ef4444' },
     { label: 'MED', value: medP, color: '#f59e0b' },
@@ -941,14 +941,14 @@ export default function Dashboard() {
                     ].map(k => (
                       <div key={k.label} className={`${k.bg} border rounded-xl p-3 text-center`}>
                         <span className={`block text-2xl font-bold ${k.color}`}>{k.value}</span>
-                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{k.label}</span>
+                        <span className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">{k.label}</span>
                       </div>
                     ))}
                   </div>
 
                   <div className="grid grid-cols-2 gap-5">
                     <div className={`border rounded-2xl p-4 shadow-2xs ${isDarkMode ? 'bg-slate-850 border-slate-800' : 'bg-white border-slate-200'}`}>
-                      <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Task Status Breakdown</h5>
+                      <h5 className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Task Status Breakdown</h5>
                       <div className="flex items-center gap-6">
                         <DonutChart done={Number(aiSummary.done ?? 0)} inProgress={Number(aiSummary.inProgress ?? 0)} todo={Number(aiSummary.todo ?? 0)} size={120} isDarkMode={isDarkMode} />
                         <div className="space-y-2 text-xs">
@@ -959,8 +959,8 @@ export default function Dashboard() {
                           ].map(l => (
                             <div key={l.label} className="flex items-center gap-2">
                               <span className={`w-2.5 h-2.5 rounded-full ${l.color} shrink-0`}></span>
-                              <span className="text-slate-400 font-medium">{l.label}</span>
-                              <span className="font-bold text-slate-100 ml-auto pl-3">{l.value}</span>
+                              <span className="text-slate-600 dark:text-slate-400 font-medium">{l.label}</span>
+                              <span className={`font-bold ml-auto pl-3 ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}>{l.value}</span>
                             </div>
                           ))}
                         </div>
@@ -968,7 +968,7 @@ export default function Dashboard() {
                     </div>
 
                     <div className={`border rounded-2xl p-4 shadow-2xs ${isDarkMode ? 'bg-slate-850 border-slate-800' : 'bg-white border-slate-200'}`}>
-                      <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Priority Distribution</h5>
+                      <h5 className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Priority Distribution</h5>
                       <div className="flex flex-col items-center gap-2">
                         <BarChart highP={Number(aiSummary.highPriority ?? 0)} medP={Number(aiSummary.medPriority ?? 0)} lowP={Number(aiSummary.lowPriority ?? 0)} />
                         <div className="flex items-center gap-4 text-[10px] font-bold">
@@ -982,8 +982,8 @@ export default function Dashboard() {
 
                   <div className={`border rounded-2xl p-4 shadow-2xs space-y-3 ${isDarkMode ? 'bg-slate-850 border-slate-800' : 'bg-white border-slate-200'}`}>
                     <div className="flex items-center justify-between">
-                      <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Overall Completion Rate</h5>
-                      <span className="text-lg font-bold text-blue-500">{aiSummary.completionRate ?? 0}%</span>
+                      <h5 className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Overall Completion Rate</h5>
+                      <span className="text-lg font-bold text-blue-600 dark:text-blue-500">{aiSummary.completionRate ?? 0}%</span>
                     </div>
                     <div className={`h-4 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-slate-100'}`}>
                       <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-700" style={{ width: `${aiSummary.completionRate ?? 0}%` }} />
