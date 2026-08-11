@@ -168,7 +168,7 @@ export default function ForgotPassword({ navigate }) {
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Min 8 chars (1 upper, 1 lower, 1 number, 1 special)"
+                  placeholder="Create new password (min 4 characters)"
                   required
                   disabled={isLoading}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm"
@@ -196,7 +196,7 @@ export default function ForgotPassword({ navigate }) {
 
             <button
               type="submit"
-              disabled={isLoading || success}
+              disabled={isLoading || !!success}
               className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-semibold text-sm transition-all shadow-sm flex items-center justify-center gap-2"
             >
               {isLoading ? (
