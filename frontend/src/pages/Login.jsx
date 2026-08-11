@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, User, Lock, Boxes, Loader2, ArrowRight } from 'lucide-react';
+import { LogIn, User, Lock, Boxes, Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export default function Login({ navigate }) {
   const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (username.trim().length < 3) {
-      setError('Username must be at least 3 characters.');
+    if (!username.trim()) {
+      setError('Please enter your username.');
       return;
     }
     if (!password) {
@@ -27,15 +28,15 @@ export default function Login({ navigate }) {
       await login(username.trim(), password);
       navigate('/dashboard');
     } catch (err) {
-      console.error(err);
+      console.error('Login error:', err);
       if (err.response?.status === 401 || err.response?.status === 404) {
-        setError(`Username "${username}" not found or password incorrect. Please check your username or password.`);
+        setError(`Username "${username}" not found or password incorrect. Please check your details or register a new account.`);
       } else if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (typeof err.response?.data === 'string') {
         setError(err.response.data);
       } else {
-        setError(`Unable to log in with username "${username}". Please check credentials or register a new account.`);
+        setError(`Unable to log in with username "${username}". Please check credentials or register.`);
       }
     } finally {
       setIsLoading(false);
@@ -61,17 +62,11 @@ export default function Login({ navigate }) {
           </div>
         )}
 
-        {isLoading && (
-          <div className="flex justify-center mb-4">
-            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-          </div>
-        )}
-
         {/* Credentials Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1.5">
-              Username or Email
+              Username
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
@@ -81,7 +76,7 @@ export default function Login({ navigate }) {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username or email"
+                placeholder="Enter your username"
                 required
                 disabled={isLoading}
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
@@ -107,14 +102,22 @@ export default function Login({ navigate }) {
                 <Lock className="w-4 h-4" />
               </span>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
                 required
                 disabled={isLoading}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
+                className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer focus:outline-none"
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
@@ -144,7 +147,7 @@ export default function Login({ navigate }) {
               onClick={() => navigate('/register')}
               className="text-blue-600 hover:text-blue-700 font-bold transition-colors focus:outline-none inline-flex items-center gap-0.5 cursor-pointer"
             >
-              Register Now <ArrowRight className="w-3.5 h-3.5" />
+              Create Account <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </p>
         </div>

@@ -64,7 +64,7 @@ public class AuthController {
                     .body(new MessageResponse("Error: Username is already taken!"));
         }
 
-        userService.registerUser(signUpRequest.getUsername(), signUpRequest.getPassword());
+        userService.registerUser(signUpRequest.getUsername(), signUpRequest.getEmail(), signUpRequest.getPassword());
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }

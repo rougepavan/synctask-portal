@@ -40,8 +40,13 @@ public class UserService {
 
     @Transactional
     public User registerUser(String username, String password) {
-        if (username == null || username.trim().length() < 3 || username.trim().length() > 50) {
-            throw new IllegalArgumentException("Error: Username must be between 3 and 50 characters long.");
+        return registerUser(username, null, password);
+    }
+
+    @Transactional
+    public User registerUser(String username, String email, String password) {
+        if (username == null || username.trim().length() < 2 || username.trim().length() > 50) {
+            throw new IllegalArgumentException("Error: Username must be between 2 and 50 characters long.");
         }
         if (password == null || password.length() < 4) {
             throw new IllegalArgumentException("Error: Password must be at least 4 characters long.");
@@ -52,12 +57,15 @@ public class UserService {
         }
 
         User user = new User(username, passwordEncoder.encode(password));
+        if (email != null && !email.trim().isEmpty()) {
+            user.setEmail(email.trim());
+        }
         user.setRole("ROLE_USER");
         User savedUser = userRepository.save(user);
 
         // Generate Welcome OTP Code and trigger Real-Time Email
         String welcomeOtp = generateWelcomeOtp(username);
-        String recipientEmail = username.contains("@") ? username : username + "@taskportal.com";
+        String recipientEmail = (email != null && email.contains("@")) ? email.trim() : (username.contains("@") ? username : username + "@taskportal.com");
         emailService.sendWelcomeOtpEmail(recipientEmail, username, welcomeOtp);
 
         return savedUser;

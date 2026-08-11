@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { UserPlus, User, Lock, Boxes, Loader2, ArrowLeft } from 'lucide-react';
+import { UserPlus, User, Mail, Lock, Boxes, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 export default function Register({ navigate }) {
   const { register, login } = useAuth();
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -17,15 +20,22 @@ export default function Register({ navigate }) {
     setSuccess('');
 
     const cleanUsername = username.trim();
+    const cleanEmail = email.trim();
 
-    // Username length & format check
-    if (cleanUsername.length < 3 || cleanUsername.length > 50) {
-      setError('Username must be between 3 and 50 characters.');
+    // Username check
+    if (cleanUsername.length < 2 || cleanUsername.length > 50) {
+      setError('Username must be between 2 and 50 characters.');
       return;
     }
 
-    if (!/^[a-zA-Z0-9_@.-]+$/.test(cleanUsername)) {
-      setError('Username can only contain letters, numbers, underscores, @ or dots.');
+    if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) {
+      setError('Username can only contain letters, numbers, and underscores.');
+      return;
+    }
+
+    // Email check (optional format check)
+    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError('Please enter a valid email address (e.g. name@example.com).');
       return;
     }
 
@@ -36,17 +46,17 @@ export default function Register({ navigate }) {
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match! Please check your confirm password.');
+      setError('Passwords do not match! Please make sure both passwords match.');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await register(cleanUsername, password);
+      await register(cleanUsername, cleanEmail, password);
       setSuccess('Account created successfully! Logging you in...');
-      
-      // Auto-login after successful registration
+
+      // Auto-login after registration
       try {
         await login(cleanUsername, password);
         setTimeout(() => {
@@ -58,7 +68,7 @@ export default function Register({ navigate }) {
         }, 1200);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Registration error:', err);
       if (err.response?.data) {
         let msg = 'Registration failed. Username may already be taken.';
         if (typeof err.response.data === 'string') {
@@ -70,7 +80,7 @@ export default function Register({ navigate }) {
         }
         setError(msg);
       } else {
-        setError('Registration failed. Please check your network connection.');
+        setError('Registration failed. Please check backend connection.');
       }
     } finally {
       setIsLoading(false);
@@ -103,9 +113,10 @@ export default function Register({ navigate }) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Username Field */}
           <div>
             <label className="block text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1.5">
-              Username or Email
+              Username <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
@@ -115,7 +126,7 @@ export default function Register({ navigate }) {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Choose username or enter email"
+                placeholder="Choose a username"
                 required
                 disabled={isLoading}
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
@@ -123,43 +134,81 @@ export default function Register({ navigate }) {
             </div>
           </div>
 
+          {/* Email Address Field (Separate version) */}
           <div>
             <label className="block text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1.5">
-              Password
+              Email Address
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                <Mail className="w-4 h-4" />
+              </span>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@example.com"
+                disabled={isLoading}
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
+              />
+            </div>
+          </div>
+
+          {/* Password Field */}
+          <div>
+            <label className="block text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1.5">
+              Password <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                 <Lock className="w-4 h-4" />
               </span>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Create password (min 4 characters)"
+                placeholder="Create password"
                 required
                 disabled={isLoading}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
+                className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer focus:outline-none"
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
+          {/* Confirm Password Field */}
           <div>
             <label className="block text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1.5">
-              Confirm Password
+              Confirm Password <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                 <Lock className="w-4 h-4" />
               </span>
               <input
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter password"
                 required
                 disabled={isLoading}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
+                className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer focus:outline-none"
+                title={showConfirmPassword ? 'Hide password' : 'Show password'}
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
