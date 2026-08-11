@@ -9,6 +9,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.CompletableFuture;
+
 @Service
 public class EmailService {
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
@@ -32,7 +34,7 @@ public class EmailService {
                 "<p style='font-size: 11px; color: #94a3b8; text-align: center;'>SyncTask AI Portal Security Team</p>" +
                 "</div>";
 
-        sendHtmlEmail(toEmail, subject, htmlContent);
+        sendHtmlEmailAsync(toEmail, subject, htmlContent);
     }
 
     public void sendForgotPasswordOtpEmail(String toEmail, String username, String otpCode) {
@@ -48,7 +50,7 @@ public class EmailService {
                 "<p style='font-size: 11px; color: #94a3b8; text-align: center;'>SyncTask AI Portal Security Team</p>" +
                 "</div>";
 
-        sendHtmlEmail(toEmail, subject, htmlContent);
+        sendHtmlEmailAsync(toEmail, subject, htmlContent);
     }
 
     public void sendActionNotificationEmail(String toEmail, String username, String actionName) {
@@ -64,27 +66,30 @@ public class EmailService {
                 "<p style='font-size: 11px; color: #94a3b8; text-align: center;'>SyncTask AI Portal Security Team</p>" +
                 "</div>";
 
-        sendHtmlEmail(toEmail, subject, htmlContent);
+        sendHtmlEmailAsync(toEmail, subject, htmlContent);
     }
 
-    private void sendHtmlEmail(String toEmail, String subject, String htmlContent) {
-        if (mailSender == null) {
-            logger.warn("JavaMailSender is not configured. Simulating real-time email dispatch to: {}", toEmail);
-            return;
-        }
+    private void sendHtmlEmailAsync(String toEmail, String subject, String htmlContent) {
+        // Dispatch email sending in background thread pool to prevent blocking HTTP requests
+        CompletableFuture.runAsync(() -> {
+            if (mailSender == null) {
+                logger.warn("JavaMailSender is not configured. Simulating email dispatch to: {}", toEmail);
+                return;
+            }
 
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail);
-            helper.setTo(toEmail);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
+            try {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+                helper.setFrom(fromEmail);
+                helper.setTo(toEmail);
+                helper.setSubject(subject);
+                helper.setText(htmlContent, true);
 
-            mailSender.send(message);
-            logger.info("Real-time email dispatched successfully to {}", toEmail);
-        } catch (Exception e) {
-            logger.error("Failed to send real-time email to {}: {}", toEmail, e.getMessage());
-        }
+                mailSender.send(message);
+                logger.info("Real-time email dispatched successfully to {}", toEmail);
+            } catch (Exception e) {
+                logger.error("Email dispatch exception to {}: {}", toEmail, e.getMessage());
+            }
+        });
     }
 }
