@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, User, Lock, Boxes, Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { LogIn, User, Lock, Boxes, Loader2, ArrowRight, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 
 export default function Login({ navigate }) {
   const { login } = useAuth();
@@ -8,10 +8,14 @@ export default function Login({ navigate }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
+
     if (!username.trim()) {
       setError('Please enter your username.');
       return;
@@ -21,22 +25,28 @@ export default function Login({ navigate }) {
       return;
     }
 
-    setError('');
     setIsLoading(true);
 
     try {
       await login(username.trim(), password);
-      navigate('/dashboard');
+      setSuccess(`Welcome back, ${username.trim()}! Redirecting to dashboard...`);
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 600);
     } catch (err) {
       console.error('Login error:', err);
-      if (err.response?.status === 401 || err.response?.status === 404) {
-        setError(`Username "${username}" not found or password incorrect. Please check your details or register a new account.`);
+      if (!err.response) {
+        setError('Unable to connect to server. The backend may be starting up — please wait a moment and try again.');
+      } else if (err.response?.status === 401 || err.response?.status === 404) {
+        setError('Incorrect username or password. Please check your details or create a new account.');
       } else if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (typeof err.response?.data === 'string') {
         setError(err.response.data);
+      } else if (typeof err.response?.data === 'object') {
+        setError(Object.values(err.response.data).join(' • '));
       } else {
-        setError(`Unable to log in with username "${username}". Please check credentials or register.`);
+        setError('Login failed. Please check your credentials and try again.');
       }
     } finally {
       setIsLoading(false);
@@ -56,9 +66,18 @@ export default function Login({ navigate }) {
           <p className="text-slate-500 text-xs mt-1">Enterprise Task Management & AI Automation</p>
         </div>
 
+        {/* Error Alert Box */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-3.5 mb-5 text-center font-medium leading-relaxed">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-3.5 mb-5 text-center font-medium leading-relaxed shadow-2xs">
             {error}
+          </div>
+        )}
+
+        {/* Success Alert Box */}
+        {success && (
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl p-3.5 mb-5 text-center font-semibold flex items-center justify-center gap-2 shadow-2xs">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{success}</span>
           </div>
         )}
 
@@ -78,7 +97,7 @@ export default function Login({ navigate }) {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your username"
                 required
-                disabled={isLoading}
+                disabled={isLoading || !!success}
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
               />
             </div>
@@ -107,7 +126,7 @@ export default function Login({ navigate }) {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
                 required
-                disabled={isLoading}
+                disabled={isLoading || !!success}
                 className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
               />
               <button
@@ -123,13 +142,18 @@ export default function Login({ navigate }) {
 
           <button
             type="submit"
-            disabled={isLoading}
-            className="w-full mt-2 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-semibold transition-all shadow-sm text-sm flex items-center justify-center gap-2 cursor-pointer"
+            disabled={isLoading || !!success}
+            className="w-full mt-2 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-300 text-white rounded-xl font-semibold transition-all shadow-sm text-sm flex items-center justify-center gap-2 cursor-pointer"
           >
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Signing In...
+              </>
+            ) : success ? (
+              <>
+                <CheckCircle2 className="w-4 h-4" />
+                Success!
               </>
             ) : (
               <>

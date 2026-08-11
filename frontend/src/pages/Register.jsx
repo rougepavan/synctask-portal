@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { UserPlus, User, Mail, Lock, Boxes, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { UserPlus, User, Mail, Lock, Boxes, Loader2, ArrowLeft, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 
 export default function Register({ navigate }) {
   const { register, login } = useAuth();
@@ -54,22 +54,24 @@ export default function Register({ navigate }) {
 
     try {
       await register(cleanUsername, cleanEmail, password);
-      setSuccess('Account created successfully! Logging you in...');
+      setSuccess('Account created successfully! Auto-logging you in...');
 
       // Auto-login after registration
       try {
         await login(cleanUsername, password);
         setTimeout(() => {
           navigate('/dashboard');
-        }, 800);
+        }, 600);
       } catch (loginErr) {
         setTimeout(() => {
           navigate('/login');
-        }, 1200);
+        }, 1000);
       }
     } catch (err) {
       console.error('Registration error:', err);
-      if (err.response?.data) {
+      if (!err.response) {
+        setError('Unable to connect to backend server. Render service may be starting up — please wait a moment and try again.');
+      } else if (err.response?.data) {
         let msg = 'Registration failed. Username may already be taken.';
         if (typeof err.response.data === 'string') {
           msg = err.response.data;
@@ -80,7 +82,7 @@ export default function Register({ navigate }) {
         }
         setError(msg);
       } else {
-        setError('Registration failed. Please check backend connection.');
+        setError('Registration failed. Please check your details and try again.');
       }
     } finally {
       setIsLoading(false);
@@ -101,14 +103,15 @@ export default function Register({ navigate }) {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-3.5 mb-5 font-medium leading-relaxed text-center">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-3.5 mb-5 font-medium leading-relaxed text-center shadow-2xs">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl p-3.5 mb-5 text-center font-medium">
-            {success}
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl p-3.5 mb-5 text-center font-semibold flex items-center justify-center gap-2 shadow-2xs">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{success}</span>
           </div>
         )}
 
@@ -128,7 +131,7 @@ export default function Register({ navigate }) {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Choose a username"
                 required
-                disabled={isLoading}
+                disabled={isLoading || !!success}
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
               />
             </div>
@@ -148,7 +151,7 @@ export default function Register({ navigate }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                disabled={isLoading}
+                disabled={isLoading || !!success}
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
               />
             </div>
@@ -167,9 +170,9 @@ export default function Register({ navigate }) {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Create password"
+                placeholder="Create password (min 4 characters)"
                 required
-                disabled={isLoading}
+                disabled={isLoading || !!success}
                 className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
               />
               <button
@@ -198,7 +201,7 @@ export default function Register({ navigate }) {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter password"
                 required
-                disabled={isLoading}
+                disabled={isLoading || !!success}
                 className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
               />
               <button
@@ -214,13 +217,18 @@ export default function Register({ navigate }) {
 
           <button
             type="submit"
-            disabled={isLoading || success}
+            disabled={isLoading || !!success}
             className="w-full mt-2 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-300 text-white rounded-xl font-semibold text-sm transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
           >
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Creating Account...
+              </>
+            ) : success ? (
+              <>
+                <CheckCircle2 className="w-4 h-4" />
+                Account Created!
               </>
             ) : (
               <>

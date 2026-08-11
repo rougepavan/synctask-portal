@@ -45,18 +45,10 @@ function NavigationRouter() {
     if (currentPath === '/forgot-password') {
       return <ForgotPassword navigate={navigate} />;
     }
-    if (currentPath !== '/login') {
-      window.history.replaceState({}, '', '/login');
-      return <Login navigate={navigate} />;
-    }
     return <Login navigate={navigate} />;
   } else {
-    // If authenticated, prevent visiting login/register/forgot-password
-    if (currentPath === '/login' || currentPath === '/register' || currentPath === '/forgot-password') {
-      window.history.replaceState({}, '', '/dashboard');
-      return <Dashboard />;
-    }
-    return <Dashboard />;
+    // If authenticated, render Dashboard
+    return <Dashboard navigate={navigate} />;
   }
 }
 
