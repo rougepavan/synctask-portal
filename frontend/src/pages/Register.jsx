@@ -1,41 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { GoogleLogin } from '@react-oauth/google';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { authService } from '../services/api';
-import { UserPlus, User, Lock, Boxes, Loader2, ArrowLeft, Check, AlertCircle, Sparkle } from 'lucide-react';
+import { UserPlus, User, Lock, Boxes, Loader2, ArrowLeft } from 'lucide-react';
 
 export default function Register({ navigate }) {
-  const { register, login, googleLogin } = useAuth();
+  const { register, login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setError('');
-    setIsLoading(true);
-    try {
-      await googleLogin(credentialResponse.credential);
-      setSuccess('Google Sign-In successful! Redirecting to workspace...');
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 500);
-    } catch (e) {
-      console.error('Google signup error', e);
-      setError(
-        e?.response?.data?.message ||
-        'Google Sign-In failed. Please try again or register manually.'
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleError = () => {
-    setError('Google Sign-In was cancelled or failed. Please check Authorized JavaScript Origins in Google Cloud Console.');
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,20 +18,20 @@ export default function Register({ navigate }) {
 
     const cleanUsername = username.trim();
 
-    // Username basic check
-    if (cleanUsername.length < 3 || cleanUsername.length > 30) {
-      setError('Username must be between 3 and 30 characters.');
+    // Username length & format check
+    if (cleanUsername.length < 3 || cleanUsername.length > 50) {
+      setError('Username must be between 3 and 50 characters.');
       return;
     }
 
-    if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) {
-      setError('Username can only contain letters, numbers, and underscores.');
+    if (!/^[a-zA-Z0-9_@.-]+$/.test(cleanUsername)) {
+      setError('Username can only contain letters, numbers, underscores, @ or dots.');
       return;
     }
 
-    // Password validation check
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+    // Password check
+    if (password.length < 4) {
+      setError('Password must be at least 4 characters long.');
       return;
     }
 
@@ -103,25 +77,6 @@ export default function Register({ navigate }) {
     }
   };
 
-  // Google SSO Seamless Auth
-  const handleGoogleSignup = async () => {
-    setIsLoading(true);
-    setError('');
-    const googleUser = `Google_User_${Math.floor(1000 + Math.random() * 9000)}`;
-    try {
-      await googleLogin(googleUser);
-      setSuccess('Google OAuth 2.0 Authenticated! Redirecting to workspace...');
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 500);
-    } catch (e) {
-      console.error('Google signup error', e);
-      setError('Google OAuth signup error. Ensure backend server is running.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12 relative">
       <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-slate-200 shadow-xl">
@@ -132,11 +87,11 @@ export default function Register({ navigate }) {
             <Boxes className="w-7 h-7" />
           </div>
           <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Create Account</h2>
-          <p className="text-slate-500 text-xs mt-1">Get started with SyncTask AI Portal</p>
+          <p className="text-slate-500 text-xs mt-1">Join SyncTask Enterprise Portal</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-3.5 mb-5 font-medium leading-relaxed">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-3.5 mb-5 font-medium leading-relaxed text-center">
             {error}
           </div>
         )}
@@ -147,39 +102,11 @@ export default function Register({ navigate }) {
           </div>
         )}
 
-        {/* Real Google Sign-In Button */}
-        <div className="flex justify-center mb-5">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            useOneTap={false}
-            theme="outline"
-            size="large"
-            text="continue_with"
-            shape="rectangular"
-            logo_alignment="left"
-            width="368"
-          />
-        </div>
-
-        <div className="relative flex items-center justify-center mb-5">
-          <div className="border-t border-slate-200 w-full"></div>
-          <span className="bg-white px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider absolute">or register manually</span>
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-slate-700 text-xs font-semibold uppercase tracking-wider">
-                Username
-              </label>
-              {isUsernameTaken && (
-                <span className="text-[10px] font-bold text-red-600 flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" /> Unavailable
-                </span>
-              )}
-            </div>
-
+            <label className="block text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1.5">
+              Username or Email
+            </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                 <User className="w-4 h-4" />
@@ -188,37 +115,12 @@ export default function Register({ navigate }) {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Choose username"
+                placeholder="Choose username or enter email"
                 required
                 disabled={isLoading}
-                className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-slate-800 focus:outline-none text-sm font-medium transition-all ${
-                  isUsernameTaken ? 'border-red-300 bg-red-50/20' : 'border-slate-200 focus:border-blue-500'
-                }`}
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
               />
             </div>
-
-            {/* Smart Username Availability Dropdown Suggestions */}
-            {showSuggestions && suggestions.length > 0 && (
-              <div className="mt-2.5 p-3 bg-amber-50/80 border border-amber-200 rounded-xl space-y-1.5 shadow-2xs">
-                <div className="text-[11px] font-bold text-amber-900 flex items-center gap-1">
-                  <Sparkle className="w-3.5 h-3.5 text-amber-600" />
-                  Available Username Suggestions (Click to select):
-                </div>
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {suggestions.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => handleSelectSuggestion(s)}
-                      className="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-xs font-semibold shadow-2xs transition-all flex items-center gap-1"
-                    >
-                      <Check className="w-3 h-3 text-emerald-600" />
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           <div>
@@ -233,10 +135,10 @@ export default function Register({ navigate }) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Create password"
+                placeholder="Create password (min 4 characters)"
                 required
                 disabled={isLoading}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
               />
             </div>
           </div>
@@ -256,7 +158,7 @@ export default function Register({ navigate }) {
                 placeholder="Re-enter password"
                 required
                 disabled={isLoading}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
               />
             </div>
           </div>
@@ -269,7 +171,7 @@ export default function Register({ navigate }) {
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Registering...
+                Creating Account...
               </>
             ) : (
               <>

@@ -40,11 +40,11 @@ public class UserService {
 
     @Transactional
     public User registerUser(String username, String password) {
-        if (username == null || username.trim().length() < 3 || username.trim().length() > 20 || !username.matches("^[a-zA-Z0-9_]+$")) {
-            throw new IllegalArgumentException("Error: Username must be 3-20 characters long and contain only letters, numbers, or underscores.");
+        if (username == null || username.trim().length() < 3 || username.trim().length() > 50) {
+            throw new IllegalArgumentException("Error: Username must be between 3 and 50 characters long.");
         }
-        if (password == null || password.length() < 8 || !password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]+$")) {
-            throw new IllegalArgumentException("Error: Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#) with a minimum length of 8.");
+        if (password == null || password.length() < 4) {
+            throw new IllegalArgumentException("Error: Password must be at least 4 characters long.");
         }
 
         if (userRepository.existsByUsername(username)) {
@@ -114,8 +114,8 @@ public class UserService {
             throw new IllegalArgumentException("Error: Invalid or expired OTP verification code.");
         }
 
-        if (newPassword == null || newPassword.length() < 8 || !newPassword.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]+$")) {
-            throw new IllegalArgumentException("Error: New password must contain at least 1 uppercase, 1 lowercase, 1 number, 1 special char (@$!%*?&#), min 8 chars.");
+        if (newPassword == null || newPassword.length() < 4) {
+            throw new IllegalArgumentException("Error: New password must be at least 4 characters long.");
         }
 
         User user = userRepository.findByUsername(username)
@@ -137,8 +137,8 @@ public class UserService {
             throw new IllegalArgumentException("Error: Current password is incorrect.");
         }
 
-        if (newPassword == null || newPassword.length() < 8 || !newPassword.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]+$")) {
-            throw new IllegalArgumentException("Error: New password must contain at least 1 uppercase, 1 lowercase, 1 number, 1 special char (@$!%*?&#), min 8 chars.");
+        if (newPassword == null || newPassword.length() < 4) {
+            throw new IllegalArgumentException("Error: New password must be at least 4 characters long.");
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));

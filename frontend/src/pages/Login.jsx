@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { LogIn, User, Lock, Boxes, Loader2, ArrowRight } from 'lucide-react';
 
 export default function Login({ navigate }) {
-  const { login, googleLogin } = useAuth();
+  const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -30,39 +29,17 @@ export default function Login({ navigate }) {
     } catch (err) {
       console.error(err);
       if (err.response?.status === 401 || err.response?.status === 404) {
-        setError(`User name "${username}" not found or password incorrect. Please check your username or register a new account.`);
+        setError(`Username "${username}" not found or password incorrect. Please check your username or password.`);
       } else if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (typeof err.response?.data === 'string') {
         setError(err.response.data);
       } else {
-        setError(`User name "${username}" not found or credentials invalid. Please check your username or register.`);
+        setError(`Unable to log in with username "${username}". Please check credentials or register a new account.`);
       }
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setError('');
-    setIsLoading(true);
-    try {
-      // credentialResponse.credential is the real Google ID token (JWT)
-      await googleLogin(credentialResponse.credential);
-      navigate('/dashboard');
-    } catch (err) {
-      console.error('Google login error:', err);
-      setError(
-        err?.response?.data?.message ||
-        'Google Sign-In failed. Please try again or use username/password.'
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleError = () => {
-    setError('Google Sign-In was cancelled or failed. Please try again.');
   };
 
   return (
@@ -90,30 +67,12 @@ export default function Login({ navigate }) {
           </div>
         )}
 
-        {/* Real Google Sign-In Button */}
-        <div className="flex justify-center mb-5">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            useOneTap={false}
-            theme="outline"
-            size="large"
-            text="signin_with"
-            shape="rectangular"
-            logo_alignment="left"
-            width="368"
-          />
-        </div>
-
-        <div className="relative flex items-center justify-center mb-5">
-          <div className="border-t border-slate-200 w-full"></div>
-          <span className="bg-white px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider absolute">or login with password</span>
-        </div>
-
         {/* Credentials Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1.5">Username</label>
+            <label className="block text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1.5">
+              Username or Email
+            </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                 <User className="w-4 h-4" />
@@ -122,23 +81,25 @@ export default function Login({ navigate }) {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
+                placeholder="Enter your username or email"
                 required
                 disabled={isLoading}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
               />
             </div>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-slate-700 text-xs font-semibold uppercase tracking-wider">Password</label>
+              <label className="block text-slate-700 text-xs font-semibold uppercase tracking-wider">
+                Password
+              </label>
               <button
                 type="button"
                 onClick={() => navigate('/forgot-password')}
-                className="text-xs text-blue-600 hover:text-blue-700 font-semibold focus:outline-none"
+                className="text-xs text-blue-600 hover:text-blue-700 font-semibold focus:outline-none cursor-pointer"
               >
-                Forgot password?
+                Forgot password? (OTP)
               </button>
             </div>
             <div className="relative">
@@ -152,7 +113,7 @@ export default function Login({ navigate }) {
                 placeholder="Enter password"
                 required
                 disabled={isLoading}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 text-sm font-medium"
               />
             </div>
           </div>
@@ -183,7 +144,7 @@ export default function Login({ navigate }) {
               onClick={() => navigate('/register')}
               className="text-blue-600 hover:text-blue-700 font-bold transition-colors focus:outline-none inline-flex items-center gap-0.5 cursor-pointer"
             >
-              Sign Up <ArrowRight className="w-3.5 h-3.5" />
+              Register Now <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </p>
         </div>

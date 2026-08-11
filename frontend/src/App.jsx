@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import { Loader2 } from 'lucide-react';
-
-// TODO: Replace with your actual Google OAuth Client ID from Google Cloud Console
-// https://console.cloud.google.com/apis/credentials
-// Set Authorized JavaScript Origins: http://localhost:5173
-// Set Authorized Redirect URIs: http://localhost:5173
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1048793890823-r5bga89j5dvt6uvfj16mhq6b6j4vjq6p.apps.googleusercontent.com';
 
 function NavigationRouter() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -69,10 +62,8 @@ function NavigationRouter() {
 
 export default function App() {
   return (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <AuthProvider>
-        <NavigationRouter />
-      </AuthProvider>
-    </GoogleOAuthProvider>
+    <AuthProvider>
+      <NavigationRouter />
+    </AuthProvider>
   );
 }
