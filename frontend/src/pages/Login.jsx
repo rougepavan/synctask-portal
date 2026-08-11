@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, User, Lock, Boxes, Loader2, ArrowRight, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { LogIn, User, Lock, Boxes, Loader2, ArrowRight, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function Login({ navigate }) {
   const { login } = useAuth();
@@ -34,20 +34,20 @@ export default function Login({ navigate }) {
         navigate('/dashboard');
       }, 600);
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('[Login Error]', err);
+      let errorMsg = 'Login failed. Please check your credentials and try again.';
       if (!err.response) {
-        setError('Unable to connect to server. The backend may be starting up — please wait a moment and try again.');
-      } else if (err.response?.status === 401 || err.response?.status === 404) {
-        setError('Incorrect username or password. Please check your details or create a new account.');
-      } else if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (typeof err.response?.data === 'string') {
-        setError(err.response.data);
-      } else if (typeof err.response?.data === 'object') {
-        setError(Object.values(err.response.data).join(' • '));
-      } else {
-        setError('Login failed. Please check your credentials and try again.');
+        errorMsg = 'Cannot connect to backend server. Render service may be starting up (takes ~30s on free tier). Please try again in a few seconds.';
+      } else if (err.response.status === 401 || err.response.status === 404) {
+        errorMsg = 'Incorrect username or password. Please check your details or create a new account.';
+      } else if (err.response.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (typeof err.response.data === 'string') {
+        errorMsg = err.response.data;
+      } else if (typeof err.response.data === 'object') {
+        errorMsg = Object.values(err.response.data).join(' • ');
       }
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -68,8 +68,9 @@ export default function Login({ navigate }) {
 
         {/* Error Alert Box */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-3.5 mb-5 text-center font-medium leading-relaxed shadow-2xs">
-            {error}
+          <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-3.5 mb-5 text-center font-semibold leading-relaxed flex items-center justify-center gap-2 shadow-2xs">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 

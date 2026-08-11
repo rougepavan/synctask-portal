@@ -1,12 +1,21 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8085/api';
+// Normalize API URL to guarantee it ends with /api without trailing slashes
+const rawEnvUrl = import.meta.env.VITE_API_URL || 'http://localhost:8085/api';
+let cleanUrl = rawEnvUrl.trim().replace(/\/+$/, '');
+if (!cleanUrl.endsWith('/api')) {
+  cleanUrl += '/api';
+}
+const API_URL = cleanUrl;
+
+console.log('[SyncTask API] Configured Base API URL:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30s timeout for Render cold-starts
 });
 
 // Request interceptor to add JWT token to headers
@@ -28,7 +37,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      const isAuthRequest = error.config.url.includes('/auth/');
+      const isAuthRequest = error.config && error.config.url && error.config.url.includes('/auth/');
       if (!isAuthRequest) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -79,7 +88,6 @@ export const authService = {
     return response.data;
   },
   googleAuth: async (credential) => {
-    // credential is the real Google ID token from @react-oauth/google
     const response = await api.post('/auth/google', { credential });
     if (response.data && response.data.token) {
       localStorage.setItem('token', response.data.token);
