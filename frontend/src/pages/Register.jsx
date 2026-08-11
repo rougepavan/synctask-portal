@@ -4,8 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/api';
 import { UserPlus, User, Lock, Boxes, Loader2, ArrowLeft, Check, AlertCircle, Sparkle } from 'lucide-react';
 
-const COMMON_TAKEN_USERNAMES = ['admin', 'pavan', 'user', 'test', 'root', 'manager', 'developer'];
-
 export default function Register({ navigate }) {
   const { register, login, googleLogin } = useAuth();
   const [username, setUsername] = useState('');
@@ -14,12 +12,6 @@ export default function Register({ navigate }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-
-  // Username availability state
-  const [isUsernameTaken, setIsUsernameTaken] = useState(false);
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setError('');
@@ -42,42 +34,7 @@ export default function Register({ navigate }) {
   };
 
   const handleGoogleError = () => {
-    setError('Google Sign-In was cancelled or failed. Please try again.');
-  };
-
-  // Check username availability in real-time
-  useEffect(() => {
-    const trimmed = username.trim().toLowerCase();
-    if (!trimmed) {
-      setIsUsernameTaken(false);
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    const isTaken = COMMON_TAKEN_USERNAMES.includes(trimmed);
-    setIsUsernameTaken(isTaken);
-
-    if (isTaken) {
-      const generated = [
-        `${trimmed}_dev`,
-        `${trimmed}2026`,
-        `get_${trimmed}`,
-        `${trimmed}_pro`,
-        `${trimmed}_official`
-      ];
-      setSuggestions(generated);
-      setShowSuggestions(true);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  }, [username]);
-
-  const handleSelectSuggestion = (suggested) => {
-    setUsername(suggested);
-    setIsUsernameTaken(false);
-    setShowSuggestions(false);
+    setError('Google Sign-In was cancelled or failed. Please check Authorized JavaScript Origins in Google Cloud Console.');
   };
 
   const handleSubmit = async (e) => {
@@ -85,42 +42,47 @@ export default function Register({ navigate }) {
     setError('');
     setSuccess('');
 
-    if (isUsernameTaken) {
-      setError('This username is already taken. Please choose one of the available suggestions below.');
+    const cleanUsername = username.trim();
+
+    // Username basic check
+    if (cleanUsername.length < 3 || cleanUsername.length > 30) {
+      setError('Username must be between 3 and 30 characters.');
       return;
     }
 
-    // Username basic check
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-      setError('Username must be 3-20 characters (letters, numbers, or underscores).');
+    if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) {
+      setError('Username can only contain letters, numbers, and underscores.');
       return;
     }
 
     // Password validation check
-    const isPasswordValid = password.length >= 8 &&
-                            /[A-Z]/.test(password) &&
-                            /[a-z]/.test(password) &&
-                            /[0-9]/.test(password) &&
-                            /[@$!%*?&#]/.test(password);
-
-    if (!isPasswordValid) {
-      setError('Password must contain at least 8 characters, 1 uppercase, 1 lowercase, 1 number, and 1 special character (@$!%*?&#).');
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError('Passwords do not match! Please check your confirm password.');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await register(username, password);
-      setSuccess('Account created successfully! Redirecting to login...');
-      setTimeout(() => {
-        navigate('/login');
-      }, 1500);
+      await register(cleanUsername, password);
+      setSuccess('Account created successfully! Logging you in...');
+      
+      // Auto-login after successful registration
+      try {
+        await login(cleanUsername, password);
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 800);
+      } catch (loginErr) {
+        setTimeout(() => {
+          navigate('/login');
+        }, 1200);
+      }
     } catch (err) {
       console.error(err);
       if (err.response?.data) {
@@ -133,15 +95,8 @@ export default function Register({ navigate }) {
           msg = Object.values(err.response.data).join(' • ');
         }
         setError(msg);
-        // Trigger suggestions on error
-        if (msg.toLowerCase().includes('taken') || msg.toLowerCase().includes('exists')) {
-          setIsUsernameTaken(true);
-          const generated = [`${username}_dev`, `${username}2026`, `get_${username}`];
-          setSuggestions(generated);
-          setShowSuggestions(true);
-        }
       } else {
-        setError('Registration failed. Please ensure the backend server is active.');
+        setError('Registration failed. Please check your network connection.');
       }
     } finally {
       setIsLoading(false);
@@ -308,7 +263,7 @@ export default function Register({ navigate }) {
 
           <button
             type="submit"
-            disabled={isLoading || success || isUsernameTaken}
+            disabled={isLoading || success}
             className="w-full mt-2 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-300 text-white rounded-xl font-semibold text-sm transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
           >
             {isLoading ? (
