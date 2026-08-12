@@ -1,5 +1,7 @@
 # SyncTask AI - AI-Powered Task Management Portal
 
+🚀 **Live Demo:** [https://synctask-portal.vercel.app/](https://synctask-portal.vercel.app/)
+
 SyncTask AI is a full-stack, enterprise-grade task management dashboard designed with a modern dark theme and glassmorphic UI. It features user authentication (Spring Security + JWT), intelligent task assistance powered by the Google Gemini API, and a custom cryptographic audit ledger that logs all task updates in an immutable hash chain.
 
 ---
@@ -8,7 +10,7 @@ SyncTask AI is a full-stack, enterprise-grade task management dashboard designed
 
 *   **Backend:** Spring Boot 3.3.2, Spring Security 6, Spring Data JPA, Java JWT (JJWT 0.12.x), Hibernate Validation.
 *   **Frontend:** React 19, Vite, Tailwind CSS v3, Axios, Lucide React (Icons).
-*   **Database:** MySQL 8.x (main profile) / H2 In-Memory Database (test profile).
+*   **Database:** PostgreSQL (production profile) / H2 In-Memory Database (test profile).
 *   **AI Integration:** Google Gemini API (`gemini-1.5-flash`).
 *   **Security:** Hashed passwords (BCrypt), Stateless JWT Authentication, CORS configurations.
 
@@ -34,7 +36,7 @@ SyncTask AI is a full-stack, enterprise-grade task management dashboard designed
 
 ### 4. Cryptographic Audit Ledger (Blockchain Integration)
 *   Implemented **Option A — Immutable Task History** mock ledger.
-*   Every task created, updated, or deleted creates a cryptographic "block" stored in the MySQL database.
+*   Every task created, updated, or deleted creates a cryptographic "block" stored in the PostgreSQL database.
 *   Each block stores a `previous_hash` pointing to the previous block's SHA-256 hash, the action type, a JSON snapshot of the task state, a timestamp, and its own calculated SHA-256 hash.
 *   **Verification Panel:** The dashboard contains a **Verify Ledger Integrity** section. Clicking it triggers an API call that traces the chain from the genesis block, recalculates all SHA-256 hashes, checks parent-child linkages, and reports whether the ledger is untampered (Green Shield) or compromised (Red Shield).
 
@@ -91,22 +93,23 @@ Refer to [schema.sql](file:///d:/java_project/schema.sql) for SQL table structur
 ### Prerequisites
 *   Java Development Kit (JDK) 17 or higher.
 *   Node.js (v18 or higher) and npm.
-*   MySQL Server (v8.x) running locally.
+*   PostgreSQL running locally.
 
-### Step 1: Create the MySQL Database
-Log into your MySQL command-line client or administration interface (e.g., MySQL Workbench, phpMyAdmin) and run:
+### Step 1: Create the PostgreSQL Database
+Log into your PostgreSQL command-line client (`psql`) or administration interface (e.g., pgAdmin) and run:
 
 ```sql
 CREATE DATABASE taskportal;
 ```
 
-*(Note: The Spring Boot configuration is set to automatically run `createDatabaseIfNotExist=true` on startup. If your root database user has appropriate permissions, this database will be created automatically.)*
+*(Note: The Spring Boot configuration is set to automatically update the schema on startup. If your root database user has appropriate permissions, tables will be created automatically.)*
 
 ### Step 2: Configure Environment Variables
-Set the following environment variables if your MySQL configuration differs from defaults, or if you wish to enable the live Google Gemini API:
+Set the following environment variables if your PostgreSQL configuration differs from defaults, or if you wish to enable the live Google Gemini API:
 
-*   `MYSQL_USER`: The MySQL username (default: `root`).
-*   `MYSQL_PASSWORD`: The MySQL password (default: empty).
+*   `DATABASE_URL`: The PostgreSQL connection URL (e.g., `jdbc:postgresql://localhost:5432/taskportal`)
+*   `DB_USERNAME`: The PostgreSQL username (default: `postgres`).
+*   `DB_PASSWORD`: The PostgreSQL password.
 *   `GEMINI_API_KEY`: Your Google Gemini API Key (Optional. If omitted, the app will run with a local mock AI generator).
 
 ### Step 3: Run the Backend
